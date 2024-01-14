@@ -22,7 +22,8 @@ For target $t\in[0,1]$ we define the following three conditions a header $h$ mus
 2. The Janushash must not be too small $J(h) \ge t/10$.
 3. The Sha256t must not be too small $Y(h) \ge c$ for some constant $c=e^{-6.5}\approx 0.001503439$
 
-An equivalent formulation is to require that $(X(h),Y(h))$ must be an element of the *acceptancee region* $A_t\subset [0,1]^2$ defined as
+An equivalent formulation is to require that $(X(h),Y(h))$ must be an element of the *acceptance region* $A_t\subset [0,1]^2$ defined as
+
 $$
 A_t := \big\{(x,y)\in[0,1]^2\big\vert\; t/10\le xy^{0.7} <t\land y>c\big\}
 $$
@@ -31,12 +32,14 @@ $$
 The target controls the difficulty, obviously if the target is decreased then the condition to solve a block is more difficult to satisfy.
 ### More insight on the log scale
 If we apply the logarithmic transformation on the acceptance region $A_t$, the condition
+
 $$ t/10\le xy^{0.7} <t\land y>c $$
 can be reformulated as
 $$ -\log(t/10)\ge -\log(x)+0.7(-\log(y)) >-\log(t)\land -\log(y)<-\log(c) $$
+
 Recall that $x$ and $y$ are less than 1. This means $-\log(x)$ and $-\log(y)$ are positive. We can therefore visualize the acceptance region $A_t$ in the first [quadrant](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)) of a [Cartesian coordinate system](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) representing $-\log(x)$ and $-\log(y)$ along its axes.
 
-The following figure depicts the situation in log scale, the acceptance region $A_t$ is colorered light blue:
+The following figure depicts the situation in log scale, the acceptance region $A_t$ is colored light blue:
 <p align="center">
   <img src="./img/acceptance_region2.svg" alt="Acceptance Region"/>
 </p>
@@ -64,12 +67,15 @@ Recall that a block is rejected if the Sha256t hash of its header is too small, 
 Now consider a specific mining setting. We denote the Verushash v2.1 hashrate by $\mathfrak{h}_X$ and the Sha256t hashrate by $\mathfrak{h}_Y$. For simplicity we will call $\mathfrak{h}_X$ the *CPU hashrate* and $\mathfrak{h}_Y$ the *GPU hashrate* because these are the devices that the respective algorithms are typically mined on at the moment. We will denote the $\frac{\mathfrak{h}_Y}{\mathfrak{h}_X}$ by $a$ and since GPU hashrate is usually greater than CPU hashrate $a$ will be greater than 1. We call this number the *mining ratio*.
 
 To match CPU hashrate, hashes computed on GPU must be filtered, and from the discussion above a reasonable filter condition is to compute Verushash v2.1 on headers $h$ that satisfy
+
 $$ c< Y(h) < c+1/a$$
+
 This way we would select fraction 1/a of GPU hashes to check Verushash v2.1 on the corresponding headers. The fraction $1/a$ of GPU hashrate will exactly match the CPU hashrate such that filtered GPU results will come at the right rate to be processed by CPU. 
 
 Note that this is only true for $a > (1-c)^{-1}$, for the small range between $1$ and $(1-c)^{-1}$ (which is only a tiny bit larger than 1) the above reasoning would need to treat the case where filtering cannot avoid that some GPU hashes are rejected for $Y$ being smaller than $c$ if we want to match CPU rate. In this case CPU and GPU hash rates are just too close to allow enough filtering. But we ignore this small range for now as usually GPU hash rate on Sha256t is orders of magnitude larger than CPU hashrate on Verushash v2.1.
 
 For some number $d \in [c,1]$ it holds that
+
 $$
 \begin{align*} 
 \mathbb{P}\big[(X,Y)\in A_t\land Y\in[c,d]\big]&=\int_{-\log(d)}^{-\log(c)}e^{-y}\int_{-\log(t)-0.7y}^{-\log(t/10)-0.7y}e^{-x}\textnormal{d}x\textnormal{d}y\\
@@ -88,11 +94,14 @@ If we plug in $d=c+1/a$ we see that if $Y(h)$ is filtered to be in the interval 
 $$
 \mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,c+1/a]\big] =3ta\big((c+1/a)^{0.3}-c^{0.3}\big)
 $$
+
 ### Mining Ratio Boost
 We observe that the probability to mine a block given that its Sha256t is filtered to be in the interval $[c,c+1/a]$ is influenced via the term $a\big((c+1/a)^{0.3}-c^{0.3}\big)$. We therefore define 
+
 $$
 \gamma(a) = a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})
 $$
+
 for $a\ge 1$ (again mind the small range $[1,(1-c)^{-1}$] where the reasoning is not correct). Note that $\gamma$ is a scaled version of the above term such that $\gamma(1)=1$. This way we can see clearly how mining ratio boosts the mining probability. We call $\gamma(a)$ the *mining ratio boost* for mining ratio $a$.
 
 The function $\gamma$ looks like this:
@@ -114,6 +123,7 @@ plot(f, xlim=[1,200])
 </details>
 
 There is a limit on the mining ratio boost:
+
 $$
 \begin{align*} 
 \lim_{a\to\infty} \gamma(a) &= \lim_{a\to\infty}a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})\\
@@ -123,6 +133,7 @@ $$
 &\approx 24.36,
 \end{align*}
 $$
+
 where we used [L'Hôpital's rule](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) in the third step and finally plugged in the constant $c =e^{-6.5}$. This means that mining ratio boost cannot go above $\approx 24.36$ no matter how much Sha256t hashrate is thrown into the game. The higher the mining ratio of GPU/CPU hashrates, the more CPU, i.e. Verushash v2.1 hashrate becomes the bottleneck. 
 
 This is intended and protects Warthog against ASICs applied to Sha256t. Furthermore, at the moment while there does not yet exist an optimized miner yet, it protects against exploitation of the algorithm by closed source miners that reach higher Sha256t hashrate. Such mining behavior will suffer from being bottlenecked by CPU hashrate heavily.
