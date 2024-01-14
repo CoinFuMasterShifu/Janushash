@@ -1,52 +1,141 @@
 # Details on Janushash 
 
-## Definition
+## Interpreting Hashes as Numbers
 
 - Each hash (32 byte hex string) can be interpreted as a number in the interval $[0,1)$. 
     - For example the hash `FFFF...FFFF` would correspond to 1-2^256 which is almost 1 and 
     - the hash `0000...0000` would correspond to 0. 
     - **Note**: A hash cannot correspond to exactly 1 but almost 1. 
-- For some byte sequence $b$ we denote
-    - the verus hash interpreted as a number in $[0,1)$ by $x(b)$ and
-    - the triple sha256 hash interpreted as a number in $[0,1)$ by $y(b)$.
-- From now on we will omit the dependency on $b$ and will just write $x$ and $y$ instead of $x(b)$ and $y(b)$ respectively.
-- We define the number $j\in [0,1)$ by
-$$j := x y^{0.7}$$
-- $j$ depends implicitly on the hashed byte sequence $b$.
-- Similar to above where we converted a hash to a number we can do the reverse, i.e. interpret a number in $[0,1)$ as a hash.
+- For a block header $h$ we denote
+    - the verus hash interpreted as a number in $[0,1)$ by $X(h)$ and
+    - the triple sha256 hash interpreted as a number in $[0,1)$ by $Y(h)$.
+- We define the Janushash number $J(h) = X(h)Y(h)^{0.7}$.
+- Similar to above where we converted a hash to a number we can do the reverse, i.e. interpret $J(h)$ as a hash, this hash is the Janushash but we will never compute it or work with it, instead we will solely consider the number representation $J(h)$. All theory works with numbers, so implementation only needs to convert hashes to numbers, but not numbers to hashes For convenience we will call the Janushash number also *Janushash*.
 - **Note**: To represent a small number as a hash, one might require more than 32 digits, there exist transcendental numbers which even require infinite digits to be represent exactly. However this is not of interest for us.
-- The Janushash of $b$ is the number $j$ interpreted as a hash. 
-- We will solely work with the number $j$ and will never explicitly consider the Janushash (hash equivalent of $j$). All theory works with numbers, so implementation only needs to convert hashes to numbers, but not numbers to hashes.
-- For convenience from now on we will be sloppy and call $j$ the Janushash, despite $j$ is actually the number representation of the Janushash.
 
 
 ## Condition to solve a block
 
-- We define the condition to solve a block by
-$$j < t,$$ 
-- Here $j$ is the janushash of the block header, i.e. one needs to compute triple sha256 and verushash of the header to compute $j$, and $t\in[0,1]$ is the target. 
-- The target controls the difficulty, obviously if the target is decreased then the condition to solve a block is more difficult to satisfy and vice versa.
-### Mining difficulty
-- The number of block headers that a miner needs to try until it finds a janushash that solves a block is random, more precisely it is [geometrically distributed](https://en.wikipedia.org/wiki/Geometric_distribution) because it is [memoryless](https://en.wikipedia.org/wiki/Memorylessness) (not having found a block for some time does not change the probability to find a block in the future, this is a fundamental property in mining).
-- Mining difficulty $d$ is defined as the average number of required of tries, i.e. the [expectation](https://en.wikipedia.org/wiki/Expected_value).
-- **Main question**: How exactly does $t$ control the mining difficulty?
-- Answer: To be precise this depends on the mining style (how much filtering is used in filtered mining, to be explained later) but in practice with a very good approximation 
-    - we can just ignore the dependence in mining style (TODO: prove this but I know it's true :D) and
-    - we can just use the normal retargeting mechanism of traditional PoW cryptocurrencies (I have shown this in my paper[^1], Lemma III.1).
+For target $t\in[0,1]$ we define the following three conditions a header $h$ must satisfy to have a valid Proof of Balanced Work:
+
+1. The Janushash must be below the threshold $J(h) < t$.
+2. The Janushash must not be too small $J(h) \ge t/10$.
+3. The Sha256t must not be too small $Y(h) \ge c$ for some constant $c=e^{-6.5}\approx 0.001503439$
+
+An equivalent formulation is to require that $(X(h),Y(h))$ must be an element of the *acceptancee region* $A_t\subset [0,1]^2$ defined as
+$$
+A_t := \big\{(x,y)\in[0,1]^2\big\vert\; t/10\le xy^{0.7} <t\land y>c\big\}
+$$
 
 
-## More insight on the log scale
-Recall that the condition to solve a block is $xy^{0.7} < t$. 
-It is more convenient to work on the logarithmic scale. So we apply the logarithm on both sides of the equation to reformulate the condition:
-$$\log(x) + 0.7 \log(y) < \log(t)$$
-Recall that $x$ and $y$ are less than 1. This means $-\log(x)$ and $-\log(y)$ are positive. We can therefore visualize the *acceptance region* (blue area, region where $xy^{0.7}< t$ is satisfied) in the first [quadrant](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)) of a [Cartesian coordinate system](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) representing $-\log(x)$ and $-\log(y)$ along its axes:
+The target controls the difficulty, obviously if the target is decreased then the condition to solve a block is more difficult to satisfy.
+### More insight on the log scale
+If we apply the logarithmic transformation on the acceptance region $A_t$, the condition
+$$ t/10\le xy^{0.7} <t\land y>c $$
+can be reformulated as
+$$ -\log(t/10)\ge -\log(x)+0.7(-\log(y)) >-\log(t)\land -\log(y)<-\log(c) $$
+Recall that $x$ and $y$ are less than 1. This means $-\log(x)$ and $-\log(y)$ are positive. We can therefore visualize the acceptance region $A_t$ in the first [quadrant](https://en.wikipedia.org/wiki/Quadrant_(plane_geometry)) of a [Cartesian coordinate system](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) representing $-\log(x)$ and $-\log(y)$ along its axes.
 
+The following figure depicts the situation in log scale, the acceptance region $A_t$ is colorered light blue:
 <p align="center">
-  <img src="./img/acceptance_region.svg" alt="Acceptance Region"/>
+  <img src="./img/acceptance_region2.svg" alt="Acceptance Region"/>
 </p>
 
-In the log scale the boundary of the acceptance region is formed by straight lines, and it extends infinitely along the two axes.
+## Probability Theory
+### Distribution of hashes
+A proper hash function should be random in the sense that each output bit cannot be predicted from the input and also cannot be predicted from other bits in its output. Therefore with the interpretation of a hash as a number in $[0,1)$ we can model the Verushash v2.1 $X(h)$ and the Sha256t $Y(h)$ of a header as samples of [uniform](https://en.wikipedia.org/wiki/Continuous_uniform_distribution) [random variable](https://en.wikipedia.org/wiki/Random_variable) on $[0,1]$. Since we use two different hash functions we can model the vector $(X(h),Y(h))$ as two [independent](https://en.wikipedia.org/wiki/Independence_(probability_theory)) realization of a uniform random variable on $[0,1]$. This means that the [joint distribution](https://en.wikipedia.org/wiki/Joint_probability_distribution) is the [product measure](https://en.wikipedia.org/wiki/Product_measure), i.e. the uniform distribution on $[0,1]^2$.
 
+We therefore define the random vector $(X,Y)$ to have this uniform probability distribution on $[0,1]$. Keep in mind that this random vector just models the Verushash v2.1 and Sha256t hashes (interpreted as numbers in $[0,1]$) of a block header in a probability-theoretic setting. 
+
+### Pushforward measure on log scale.
+On the log scale we consider the transformed vector $(-\log(X),-\log(Y))$. The probability distribution of this transformed vector is the [pushforward measure](https://en.wikipedia.org/wiki/Pushforward_measure) of $(X,Y)$ through the map $g: [0,1]^2 \to \mathbb{R}_{\ge0}^2, (x,y)\mapsto(-\log(x),-\log(y))$. Note that by independence of $X$ and $Y$
+
+$$
+\forall x,y\ge 0:\quad \mathbb{P}\big[-\log(X)\le x\land -\log(Y)\le y\big]=
+\mathbb{P}\big[X\le e^{-x}\land Y\le e^{-y}\big]=e^{-(x+y)}.
+$$
+Since the [Borel $\sigma$-algebra](https://en.wikipedia.org/wiki/Borel_set) on $\mathbb{R}_{\ge0}^2$is generated by the sets $[0,x]\times [0,y], x,y\in\mathbb{R}_{\ge0}$ this proves that the pushforward measure is the product measure of two identical [exponential distributions](https://en.wikipedia.org/wiki/Exponential_distribution).
+
+With this info we can do probability-theoretic calculations on the log scale.
+
+### Probability to mine a block using filtered mining
+Recall that a block is rejected if the Sha256t hash of its header is too small, i.e. if $Y< c$. Furthermore, the smaller $Y$ the easier it is to satisfy the other two conditions $1/10t \le XY^{0.7}< t$ because larger and therefore easier-to-mine Verushash v2.1 hashes are accepted.
+
+Now consider a specific mining setting. We denote the Verushash v2.1 hashrate by $\mathfrak{h}_X$ and the Sha256t hashrate by $\mathfrak{h}_Y$. For simplicity we will call $\mathfrak{h}_X$ the *CPU hashrate* and $\mathfrak{h}_Y$ the *GPU hashrate* because these are the devices that the respective algorithms are typically mined on at the moment. We will denote the $\frac{\mathfrak{h}_Y}{\mathfrak{h}_X}$ by $a$ and since GPU hashrate is usually greater than CPU hashrate $a$ will be greater than 1. We call this number the *mining ratio*.
+
+To match CPU hashrate, hashes computed on GPU must be filtered, and from the discussion above a reasonable filter condition is to compute Verushash v2.1 on headers $h$ that satisfy
+$$ c< Y(h) < c+1/a$$
+This way we would select fraction 1/a of GPU hashes to check Verushash v2.1 on the corresponding headers. The fraction $1/a$ of GPU hashrate will exactly match the CPU hashrate such that filtered GPU results will come at the right rate to be processed by CPU. 
+
+Note that this is only true for $a > (1-c)^{-1}$, for the small range between $1$ and $(1-c)^{-1}$ (which is only a tiny bit larger than 1) the above reasoning would need to treat the case where filtering cannot avoid that some GPU hashes are rejected for $Y$ being smaller than $c$ if we want to match CPU rate. In this case CPU and GPU hash rates are just too close to allow enough filtering. But we ignore this small range for now as usually GPU hash rate on Sha256t is orders of magnitude larger than CPU hashrate on Verushash v2.1.
+
+For some number $d \in [c,1]$ it holds that
+$$
+\begin{align*} 
+\mathbb{P}\big[(X,Y)\in A_t\land Y\in[c,d]\big]&=\int_{-\log(d)}^{-\log(c)}e^{-y}\int_{-\log(t)-0.7y}^{-\log(t/10)-0.7y}e^{-x}\textnormal{d}x\textnormal{d}y\\
+&=\int_{-\log(d)}^{-\log(c)}e^{-(1-0.7)y}t(1-\tfrac{1}{10})\textnormal{d}y\\
+&=
+\tfrac{1}{1-0.7}\big(d^{1-0.7}-c^{1-0.7}\big)t(1-\tfrac{1}{10})\\
+&=3t(a^{0.3}-c^{0.3}) \\
+\mathbb{P}\big[Y\in[c,d]\big]&=\int_{\log(d)}^{-\log(c)}e^{-y}\textnormal{d}y=(d-c)\\
+\mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,d]\big]&=\frac{\mathbb{P}\big[(X,Y)\in A_t\land Y\in[c,d]\big]}{\mathbb{P}\big[Y\in[c,d]\big]}\\
+&=3t\frac{(d^{0.3}-c^{0.3})}{(d-c)}
+\end{align*}
+$$
+
+If we plug in $d=c+1/a$ we see that if $Y(h)$ is filtered to be in the interval $[c, c+1/a]$, the conditional probability to mine a block is
+
+$$
+\mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,c+1/a]\big] =3ta\big((c+1/a)^{0.3}-c^{0.3}\big)
+$$
+### Mining Ratio Boost
+We observe that the probability to mine a block given that its Sha256t is filtered to be in the interval $[c,c+1/a]$ is influenced via the term $a\big((c+1/a)^{0.3}-c^{0.3}\big)$. We therefore define 
+$$
+\gamma(a) = a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})
+$$
+for $a\ge 1$ (again mind the small range $[1,(1-c)^{-1}$] where the reasoning is not correct). Note that $\gamma$ is a scaled version of the above term such that $\gamma(1)=1$. This way we can see clearly how mining ratio boosts the mining probability. We call $\gamma(a)$ the *mining ratio boost* for mining ratio $a$.
+
+The function $\gamma$ looks like this:
+<p align="center">
+  <img src="./img/miningratio_boost.png" alt="Acceptance Region"/>
+</p>
+
+<details>
+  <summary> Julia code to plot this function</summary>
+
+```julia
+c=exp(-6.5)
+beta=0.7
+f(a) = a*((c+1/a)^(1-beta)-c^(1-beta))
+g(x)=f(x)/f(1)
+using Plots
+plot(f, xlim=[1,200])
+```
+</details>
+
+There is a limit on the mining ratio boost:
+$$
+\begin{align*} 
+\lim_{a\to\infty} \gamma(a) &= \lim_{a\to\infty}a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})\\
+&=\lim_{a\searrow 0}\frac{((c+a)^{0.3}-c^{0.3}\big)}{a}((c+1)^{0.3}-c^{0.3})\\
+&=\lim_{a\searrow 0}0.3(c+a)^{-0.7}((c+1)^{0.3}-c^{0.3})\\
+&=0.3c^{-0.7}((c+1)^{0.3}-c^{0.3})\\
+&\approx 24.36,
+\end{align*}
+$$
+where we used [L'Hôpital's rule](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) in the third step and finally plugged in the constant $c =e^{-6.5}$. This means that mining ratio boost cannot go above $\approx 24.36$ no matter how much Sha256t hashrate is thrown into the game. The higher the mining ratio of GPU/CPU hashrates, the more CPU, i.e. Verushash v2.1 hashrate becomes the bottleneck. 
+
+This is intended and protects Warthog against ASICs applied to Sha256t. Furthermore, at the moment while there does not yet exist an optimized miner yet, it protects against exploitation of the algorithm by closed source miners that reach higher Sha256t hashrate. Such mining behavior will suffer from being bottlenecked by CPU hashrate heavily.
+
+### Formula to determine mining efficiency
+TODO
+
+### Estimating Mining Ratio from mined blocks
+
+TODO
+
+
+## UNFINISHED STUFF
 # Pools
 
 Conventional Proof of Work pools provide a service to allow miners to collaboratively find a proof of work that is too difficult for them to solve alone. The main benefit is the reduction of variance in mining income and since most people don't like variance they are willing to pay a small fee to reduce income variance (for the same reason insurances exist despite they cost more than they provide on average).
@@ -64,7 +153,25 @@ However in Janushash things are much more complicated :D
 
 Luckily the god of mathematics shines his light on us and makes this problem solvable. In fact we can find a nested set of two-dimensional acceptance regions such that *any* mining style behaves equally, i.e. we can find interesting two-dimensional shapes that have equal probability to be hit by a janushash, no matter how much GPU vs CPU performance is. This allows us to assign a value to them to keep track of miner contribution on pool side without knowing its mining style. Think about it: if such regions did not exist, fair pool mining would not be possible with Janushash. So we are very lucky that they exist!
 
-The only bad news is we need to hard-code some constants on pool and miner side to describe these nested acceptance regions of pool tasks. The good news is I already computed them numerically such that miner/pool devs can just copy/paste them in their code, see below.
+<p align="center">
+  <img src="./img/acceptance_region_pool.svg" alt="Acceptance Region"/>
+</p>
+
+
+$$
+\int_0^1
+$$
+
+## DEPRECATED SINCE LAST ALGO UPDATE
+### Mining difficulty
+- The number of block headers that a miner needs to try until it finds a janushash that solves a block is random, more precisely it is [geometrically distributed](https://en.wikipedia.org/wiki/Geometric_distribution) because it is [memoryless](https://en.wikipedia.org/wiki/Memorylessness) (not having found a block for some time does not change the probability to find a block in the future, this is a fundamental property in mining).
+- Mining difficulty $d$ is defined as the average number of required of tries, i.e. the [expectation](https://en.wikipedia.org/wiki/Expected_value).
+- **Main question**: How exactly does $t$ control the mining difficulty?
+- Answer: To be precise this depends on the mining style (how much filtering is used in filtered mining, to be explained later) but in practice with a very good approximation 
+    - we can just ignore the dependence in mining style (TODO: prove this but I know it's true :D) and
+    - we can just use the normal retargeting mechanism of traditional PoW cryptocurrencies (I have shown this in my paper[^1], Lemma III.1).
+
+
 ### How to find the acceptance region for pool tasks?
 NOTE: This section lacks proper explanation, it is just a raw skeleton for now, I will provide detailed explanation soon. 
 
