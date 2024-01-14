@@ -83,7 +83,7 @@ $$
 &=\int_{-\log(d)}^{-\log(c)}e^{-(1-0.7)y}t(1-\tfrac{1}{10})\textnormal{d}y\\
 &=
 \tfrac{1}{1-0.7}\big(d^{1-0.7}-c^{1-0.7}\big)t(1-\tfrac{1}{10})\\
-&=3t(a^{0.3}-c^{0.3}) \\
+&=3t(d^{0.3}-c^{0.3}) \\
 \mathbb{P}\big[Y\in[c,d]\big]&=\int_{\log(d)}^{-\log(c)}e^{-y}\textnormal{d}y=(d-c)\\
 \mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,d]\big]&=\frac{\mathbb{P}\big[(X,Y)\in A_t\land Y\in[c,d]\big]}{\mathbb{P}\big[Y\in[c,d]\big]}\\
 &=3t\frac{(d^{0.3}-c^{0.3})}{(d-c)}
