@@ -235,12 +235,7 @@ from which we find $f(x)=-\frac{1}{\beta}x +\frac{\log(\alpha)}{\beta}$. But as 
 This means that the $f$ is composed of constant sections ($x$ where $f'(x)=0$ and sections where $f(x)=-\frac{1}{\beta}x +\frac{\log(\alpha)}{\beta}$. This gives us an idea how the correct function looks like. The correct function $f$ is
 
 $$
-f_{\alpha}:
-\begin{cases}
-\mathbb{R}_{\ge 0} &\to \mathbb{R}\\
-x&\mapsto
-\min(-c_{\alpha}, -\frac{1}{\beta}x +\frac{\log(\alpha)}{\beta})
-\end{cases},
+f_{\alpha}(x) = \min\big(-c_{\alpha}, -\frac{1}{\beta}x +\frac{\log(\alpha)}{\beta}\big)\textnormal{ for }x\ge 0
 $$
 
 where the positive constant $c_{\alpha}$ is chosen such that 
