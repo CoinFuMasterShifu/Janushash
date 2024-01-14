@@ -25,7 +25,11 @@ For target $t\in[0,1]$ we define the following three conditions a header $h$ mus
 An equivalent formulation is to require that $(X(h),Y(h))$ must be an element of the *acceptance region* $A_t\subset [0,1]^2$ defined as
 
 $$
-A_t := \{(x,y)\in[0,1]^2| t/10\le xy^{0.7} <t \land y>c\}
+A_t := \{(x,y) \in [0,1]^2\mid t/10\ le xy^{0.7} < t \land y>c\}
+$$
+
+$$
+A_t := \{(x,y) \in [0,1]^2\}
 $$
 
 
