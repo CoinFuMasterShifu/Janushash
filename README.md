@@ -48,7 +48,7 @@ The following figure depicts the situation in log scale, the acceptance region $
 ### Distribution of hashes
 A proper hash function should be random in the sense that each output bit cannot be predicted from the input and also cannot be predicted from other bits in its output. Therefore with the interpretation of a hash as a number in $[0,1)$ we can model the Verushash v2.1 $X(h)$ and the Sha256t $Y(h)$ of a header as samples of [uniform](https://en.wikipedia.org/wiki/Continuous_uniform_distribution) [random variable](https://en.wikipedia.org/wiki/Random_variable) on $[0,1]$. Since we use two different hash functions we can model the vector $(X(h),Y(h))$ as two [independent](https://en.wikipedia.org/wiki/Independence_(probability_theory)) realization of a uniform random variable on $[0,1]$. This means that the [joint distribution](https://en.wikipedia.org/wiki/Joint_probability_distribution) is the [product measure](https://en.wikipedia.org/wiki/Product_measure), i.e. the uniform distribution on $[0,1]^2$.
 
-We therefore define the random vector $(X,Y)$ to have this uniform probability distribution on $[0,1]$. Keep in mind that this random vector just models the Verushash v2.1 and Sha256t hashes (interpreted as numbers in $[0,1]$) of a block header in a probability-theoretic setting. 
+We therefore define the [random vector](https://en.wikipedia.org/wiki/Multivariate_random_variable) $`(X,Y)`$ to have this uniform probability distribution on $`[0,1]`$. Keep in mind that this random vector just models the Verushash v2.1 and Sha256t hashes (interpreted as numbers in $`[0,1]`$) of a block header in a probability-theoretic setting. 
 
 ### Pushforward measure on log scale.
 On the log scale we consider the transformed vector $(-\log(X),-\log(Y))$. The probability distribution of this transformed vector is the [pushforward measure](https://en.wikipedia.org/wiki/Pushforward_measure) of $(X,Y)$ through the map $g: [0,1]^2 \to \mathbb{R}_{\ge0}^2, (x,y)\mapsto(-\log(x),-\log(y))$. Note that by independence of $X$ and $Y$
@@ -90,22 +90,22 @@ $$
 \end{align*}
 $$
 
-If we plug in $d=c+1/a$ we see that if $Y(h)$ is filtered to be in the interval $[c, c+1/a]$, the conditional probability to mine a block is
+We denote the conditional probability to mine a block for  $Y(h)$ filtered to be in the interval $[c, c+1/a]$ by $p_t(a)$. If we plug in $d=c+1/a$ above, we see observe that
 
 $$
-\mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,c+1/a]\big] =3ta\big((c+1/a)^{0.3}-c^{0.3}\big)
+p_t(a) = \mathbb{P}\big[(X,Y)\in A_t\vert Y\in[c,c+1/a]\big] =3ta\big((c+1/a)^{0.3}-c^{0.3}\big)
 $$
 
 ### Mining Ratio Boost
-We observe that the probability to mine a block given that its Sha256t is filtered to be in the interval $[c,c+1/a]$ is influenced via the term $a\big((c+1/a)^{0.3}-c^{0.3}\big)$. We therefore define 
+We observe that the probability to mine a block given that its Sha256t is filtered to be in the interval $[c,c+1/a]$ is influenced via the term $a\big((c+1/a)^{0.3}-c^{0.3}\big)$. 
+
+To express the effect of mining ratio $a$ compared to a mining ratio 1 on the filtered mining probability on $p_t$ we consider the quotient
 
 $$
-\gamma(a) = a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})
+\gamma(a) := p_t(a)/p_t(1) = a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})
 $$
 
-for $a\ge 1$ (again mind the small range $[1,(1-c)^{-1}$] where the reasoning is not correct). Note that $\gamma$ is a scaled version of the above term such that $\gamma(1)=1$. This way we can see clearly how mining ratio boosts the mining probability. We call $\gamma(a)$ the *mining ratio boost* for mining ratio $a$.
-
-The function $\gamma$ looks like this:
+for $a\ge 1$ (again mind the small range $[1,(1-c)^{-1}$] where the reasoning is not correct). Note that this does not depend on the target $t$ anymore. For every target $t$ probability to mine a block is multiplied by $\gamma(a)$ when the between GPU hashrate and CPU hashrate is $a$ compared to a quotient of $1$. We thereforecall $\gamma(a)$ the *mining ratio boost* for mining ratio $a$. The function $\gamma$ looks like this:
 <p align="center">
   <img src="./img/miningratio_boost.png" alt="Acceptance Region"/>
 </p>
@@ -137,14 +137,100 @@ $$
 
 where we used [L'Hôpital's rule](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) in the third step and finally plugged in the constant $c =e^{-6.5}$. This means that mining ratio boost cannot go above $\approx 24.36$ no matter how much Sha256t hashrate is thrown into the game. The higher the mining ratio of GPU/CPU hashrates, the more CPU, i.e. Verushash v2.1 hashrate becomes the bottleneck. 
 
-This is intended and protects Warthog against ASICs applied to Sha256t. Furthermore, at the moment while there does not yet exist an optimized miner yet, it protects against exploitation of the algorithm by closed source miners that reach higher Sha256t hashrate. Such mining behavior will suffer from being bottlenecked by CPU hashrate heavily.
+This is intended and protects Warthog against ASICs applied to Sha256t. Furthermore, at the moment while there does not yet exist an optimized miner yet, it protects against exploitation of the algorithm by closed source miners that reach higher Sha256t hashrate. Such mining behavior will suffer heavily from being bottlenecked by CPU hashrate.
 
-### Formula to determine mining efficiency
-TODO
+### Janusscore - a formula to determine mining efficiency
+We can define the  *Janusscore*, which is the mining efficiency of an arbitrary combination of a Sha256t hashrate and a smaller Verushash v2.1 hashrate with respect to the baseline of 1 hash per second for both Sha256t and Verushash v2.1.
+
+Regarding mining efficiency we observe the following:
+- The expected yield is proportional to the probability to mine a block. Therefore a setup with mining ratio $a$ is expected to generate $\gamma(a)$ times the yield of a set up with mining ratio $1$. This determines the dependency on the mining ratio $a$.
+- For each fixed mining ratio the expected yield is proportional to the number of computed Janushashes, which is equal to the number of Verushash v2.1 hashes. This determines the dependency on the CPU hashrate.
+
+We can therefore define the following *Janusscore* $S(\mathfrak{h}_X,\mathfrak{h}_Y)$ of a mining setup with Verushash v2.1 hashrate $\mathfrak{h}_X$ and Sha256t hashrate $\mathfrak{h}_Y$:
+
+$$
+S(\mathfrak{h}_X,\mathfrak{h}_Y)= \gamma(\tfrac{\mathfrak{h}_Y}{\mathfrak{h}_X})\mathfrak{h}_X= \mathfrak{h}_Y\frac{(c+\tfrac{\mathfrak{h}_X}{\mathfrak{h}_Y})^{0.3}-c^{0.3}}{(c+1)^{0.3}-c^{0.3}}
+$$
+
+This quantity has the unit "hashes per second" and indeed the Janusscore can be interpreted as a hashrate equivalent that can be used to compare different setups.
+
+Increasing one of the hashrates of $\mathfrak{h}_X$, $\mathfrak{h}_Y$ while leaving the other constant will always increase the Janusscore.
 
 ### Estimating Mining Ratio from mined blocks
 
-TODO
+The conditional density $p_{Y,a}$ of $Y$ given $(X,Y)\in A_t$ and $Y\in [c,c+\tfrac{1}{a}]$ is proportional to
+
+$$
+\begin{align*} 
+p_{Y,a}(y)&= \frac{e^{-y}\int_{-\log(t)-0.7y}^{-\log(t/10)-0.7y}e^{-x}\textnormal{d}x}{\int_{-\log(c+\frac{1}{a})}^{-\log(c)}\int_{-\log(t)-0.7y}^{-\log(t/10)-0.7y}e^{-x}\textnormal{d}x\textnormal{d}y}\\
+&= \frac{\frac{9}{10}te^{-0.3y}}{\int_{-\log(c+\frac{1}{a})}^{-\log(c)}\frac{9}{10}te^{-0.3y}\textnormal{d}y}\\
+&= \frac{e^{-0.3y}}{\int_{-\log(c+\frac{1}{a})}^{-\log(c)}e^{-0.3y}\textnormal{d}y}\\
+&= 0.3\frac{e^{-0.3y}}{(c+\frac{1}{a})^{0.3}-c^{0.3}}\\
+\end{align*}
+$$
+
+for $y\in[c, c+\frac{1}{a}]$. Note that again this does not depend on the target $t$. The conditional expectation is
+
+$$
+\begin{align*} 
+\mathbb{E}\big[Y| (X,Y)\in A_t \land Y\in [c, c+\tfrac{1}{a}]\big]
+&= \frac{\int_{-\log(c+\frac{1}{a})}^{-\log(c)}0.3e^{-y}e^{-0.3y}\textnormal{d}y}{(c+\frac{1}{a})^{0.3}-c^{0.3}}\\
+&= \tfrac{0.3}{1.3}\frac{(c+\frac{1}{a})^{1.3}-c^{1.3}}{(c+\frac{1}{a})^{0.3}-c^{0.3}}\\
+\end{align*}
+$$
+
+If we have $N$ blocks mined from a specific address we can consider their Sha256t hashes $y_1,\ldots,y_N$ to compute the empirical expectation (mean) $\bar{y}=N^{-1}\sum_{i=1}^N y_i$.  
+
+The [method of moments](https://en.wikipedia.org/wiki/Method_of_moments_(statistics)) can be used to get an estimate $\hat a$ of the mining ratio $a$ from observed Sha256t average $\bar{y}$. To do this we must find $a$ such that the empirical expectation observed from the blocks and the conditional expectation match:
+
+$$
+\begin{align*} 
+\text{Find $a\in[1,\infty]$ such that}&\quad\bar{y} = \tfrac{0.3}{1.3}\frac{(c+\frac{1}{a})^{1.3}-c^{1.3}}{(c+\frac{1}{a})^{0.3}-c^{0.3}}\\
+\end{align*}
+$$
+
+Unfortunately this can only be solved numerically, we cannot express the solution analytically. Since the mining ratio $a$ is in the range $[1,\infty]$, the maximal conditional expectation is attained for $a=1$, if we observe an empirical mean $\bar y$ larger than this number
+
+$$
+\tfrac{0.3}{1.3}\frac{(c+\frac{1}{1})^{1.3}-c^{1.3}}{(c+\frac{1}{1})^{0.3}-c^{0.3}}\approx 0.269
+$$
+
+we just estimate $\hat a=1$, otherwise we solve the above equation numerically. In the following code we cap estimation at factor 100000:
+
+<details>
+  <summary> Python code to estimate mining ratio</summary>
+
+```python
+from math import exp
+from scipy.optimize import fsolve
+
+# example usage
+def get_miningratio(sha256t_list):
+    """Function to determine the mining ratio
+    from a list of observed sha256t values
+
+    :sha256t_list: list of sha256t hashes
+    :returns: estimate of mining ratio
+
+    """
+    y_avg=sum(sha256t_list)/len(sha256t_list)
+    c = exp(-6.5)
+    p = lambda a: 0.3/1.3*((c+a)**1.3-c**1.3)/((c+a)**0.3-c**0.3)
+    threshold = p(1/100000)
+    if y_avg<threshold:
+        return 100000
+    elif y_avg >p(1):
+        return 1
+    f = lambda a: p(a)-y_avg
+    return 1/fsolve(f, [threshold, 1])[0]
+
+
+# example usage
+sha256t_list=[0.025,0.014,0.032]
+get_miningratio(sha256t_list)
+```
+</details>
+
 
 
 ## UNFINISHED STUFF
