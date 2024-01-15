@@ -179,7 +179,7 @@ $$
 \end{align*}
 $$
 
-If we have $N$ blocks mined from a specific address we can consider their Sha256t hashes $y_1,\ldots,y_N$ to compute the empirical expectation (mean) $\bar{y}=N^{-1}\sum_{i=1}^N y_i$.  
+If we have $N$ blocks mined from a specific address we can consider their Sha256t hashes $y_1,\ldots,y_N$ to compute the empirical expectation (mean) $`\bar{y}=N^{-1}\sum_{i=1}^{N} y_i`$.  
 
 The [method of moments](https://en.wikipedia.org/wiki/Method_of_moments_(statistics)) can be used to get an estimate $\hat a$ of the mining ratio $a$ from observed Sha256t average $\bar{y}$. To do this we must find $a$ such that the empirical expectation observed from the blocks and the conditional expectation match:
 
