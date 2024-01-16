@@ -156,6 +156,32 @@ This quantity has the unit "hashes per second" and indeed the Janusscore can be 
 
 Increasing one of the hashrates of $\mathfrak{h}_X$, $\mathfrak{h}_Y$ while leaving the other constant will always increase the Janusscore.
 
+<details>
+  <summary> Python code to compute the Janusscore</summary>
+
+```python
+# define Janusscore function
+c = 0.0015034391929775724
+S = lambda hx, hy: hy *((c + hx/hy)**0.3 - c**0.3)/((c + 1)**0.3 - c**0.3)
+
+# example usage with 10 mh/s Verushash hashrate and 250 mh/s Sha256t hashrate
+S(10000000, 250000000)
+```
+</details>
+
+<details>
+  <summary> Julia code to compute the Janusscore</summary>
+
+```julia
+# define Janusscore function
+c = exp(-6.5)
+S(hx, hy) = hy *((c + hx/hy)^0.3 - c^0.3)/((c + 1)^0.3 - c^0.3)
+
+# example usage with 10 mh/s Verushash hashrate and 250 mh/s Sha256t hashrate
+S(10000000, 250000000)
+```
+</details>
+
 ### Estimating Mining Ratio from mined blocks
 
 The conditional density $p_{Y,a}$ of $Y$ given $(X,Y)\in A_t$ and $Y\in [c,c+\tfrac{1}{a}]$ is proportional to
