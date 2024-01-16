@@ -128,14 +128,14 @@ There is a limit on the mining ratio boost:
 $$
 \begin{align*} 
 \lim_{a\to\infty} \gamma(a) &= \lim_{a\to\infty}a\big((c+1/a)^{0.3}-c^{0.3}\big)/((c+1)^{0.3}-c^{0.3})\\
-&=\lim_{a\searrow 0}\frac{((c+a)^{0.3}-c^{0.3}\big)}{a}((c+1)^{0.3}-c^{0.3})\\
-&=\lim_{a\searrow 0}0.3(c+a)^{-0.7}((c+1)^{0.3}-c^{0.3})\\
-&=0.3c^{-0.7}((c+1)^{0.3}-c^{0.3})\\
-&\approx 24.36,
+&=\lim_{a\searrow 0}\frac{((c+a)^{0.3}-c^{0.3}\big)}{a}/((c+1)^{0.3}-c^{0.3})\\
+&=\lim_{a\searrow 0}0.3(c+a)^{-0.7}/((c+1)^{0.3}-c^{0.3})\\
+&=0.3c^{-0.7}/((c+1)^{0.3}-c^{0.3})\\
+&\approx 33.08,
 \end{align*}
 $$
 
-where we used [L'Hôpital's rule](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) in the third step and finally plugged in the constant $c =e^{-6.5}$. This means that mining ratio boost cannot go above $\approx 24.36$ no matter how much Sha256t hashrate is thrown into the game. The higher the mining ratio of GPU/CPU hashrates, the more CPU, i.e. Verushash v2.1 hashrate becomes the bottleneck. 
+where we used [L'Hôpital's rule](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) in the third step and finally plugged in the constant $c =e^{-6.5}$. This means that mining ratio boost cannot go above $\approx 33.08$ no matter how much Sha256t hashrate is thrown into the game. The higher the mining ratio of GPU/CPU hashrates, the more CPU, i.e. Verushash v2.1 hashrate becomes the bottleneck. 
 
 This is intended and protects Warthog against ASICs applied to Sha256t. Furthermore, at the moment while there does not yet exist an optimized miner yet, it protects against exploitation of the algorithm by closed source miners that reach higher Sha256t hashrate. Such mining behavior will suffer heavily from being bottlenecked by CPU hashrate.
 
