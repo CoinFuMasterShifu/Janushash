@@ -209,7 +209,7 @@ def get_miningratio(sha256t_list):
     """Function to determine the mining ratio
     from a list of observed sha256t values
 
-    :sha256t_list: list of sha256t hashes
+    :sha256t_list: list of numbers in [0,1] corresponding to sha256t hashes
     :returns: estimate of mining ratio
 
     """
