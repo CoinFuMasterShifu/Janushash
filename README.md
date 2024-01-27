@@ -273,7 +273,7 @@ In traditional Proof of Work pools just send out headers with a simpler target. 
 
 However in Janushash things are much more complicated.
 - Firstly we now have two dimensions instead of just one (one for verushash and one for triple sha256)
-- Secondly different mining styles (different sha256t/Verushash v2.1 ratios)  might behave differently in how difficult pool tasks are solvable. This would be a disaster, if the pool cannot understand how difficult its tasks are it cannot assign a value to estimate contribution value of a share.
+- Secondly different mining styles (different Sha256t/Verushash v2.1 ratios)  might behave differently in how difficult pool tasks are solvable. This would be a disaster, if the pool cannot understand how difficult its tasks are it cannot assign a value to estimate contribution value of a share.
 
 Luckily the god of mathematics shines his light on us and makes this problem solvable. In fact we can find a nested set of two-dimensional acceptance regions such that *any* mining style behaves equally, i.e. we can find interesting two-dimensional shapes that have equal probability to be hit by a janushash, no matter how much GPU vs CPU performance is. This allows us to assign a value to them to keep track of miner contribution on pool side without knowing its mining style. Think about it: if such regions did not exist, fair pool mining would not be possible with Janushash. So we are very lucky that they exist!
 
@@ -284,5 +284,15 @@ It turns out that such nested regions are simply defined by an altered target, i
     3. The Sha256t must not be too small $Y(h) \ge c$ for some constant $c=e^{-6.5}\approx 0.001503439$
 
 The value of a pool share corresponding to this block is then $1/t$.
+
+## Miner development 
+
+Usually Sha256t hashes can be computed much faster that Verushash v2.1 with current hardware. Therefore *filtered mining* must be used to exhaust available hardware:
+
+- In a first stage Sha256t hashes are computed on a batch of header *candidates*.
+- These candidates are filtered based on Sha256t hash such that their filtered rate matches the available hashrate for Verushash v2.1.
+- Only for the candidate headers that pass the filter the Verushash v2.1 is computed and the conditions for solving a block or poo job are checked.
+
+The important part is the filtering step: Since the Verushash v2.1 hash of a header is independent of the Sha256t hash it is clear that we should apply a filter that extracts the headers $h$ with the smallest Sha256t hashes $Y(h)$ because this will generate smaller Janushash $J(h) = X(h)Y(h)^{0.7}$ on average.
 
 [^1]: *CoinFuMasterShifu* (2023). **[Proof of Balanced Work: The Theory of Mining Hash Products](https://github.com/CoinFuMasterShifu/ProofOfBalancedWork/blob/main/PoBW.pdf)**
