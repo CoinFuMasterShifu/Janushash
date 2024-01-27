@@ -293,6 +293,6 @@ Usually Sha256t hashes can be computed much faster that Verushash v2.1 with curr
 - These candidates are filtered based on Sha256t hash such that their filtered rate matches the available hashrate for Verushash v2.1.
 - Only for the candidate headers that pass the filter the Verushash v2.1 is computed and the conditions for solving a block or poo job are checked.
 
-The important part is the filtering step: Since the Verushash v2.1 hash of a header is independent of the Sha256t hash it is clear that we should apply a filter that extracts the headers $h$ with the smallest Sha256t hashes $Y(h)$ because this will generate smaller Janushash $J(h) = X(h)Y(h)^{0.7}$ on average.
+The important part is the filtering step: Since the Verushash v2.1 hash of a header is independent of the Sha256t hash it is clear that we should apply a filter that extracts the headers $h$ with the smallest Sha256t hashes $Y(h)$ that are still greater than $c$ because this will generate smaller Janushash $J(h) = X(h)Y(h)^{0.7}$ on average while satisfying the condition $Y(h) \ge c$.
 
 [^1]: *CoinFuMasterShifu* (2023). **[Proof of Balanced Work: The Theory of Mining Hash Products](https://github.com/CoinFuMasterShifu/ProofOfBalancedWork/blob/main/PoBW.pdf)**
