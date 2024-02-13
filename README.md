@@ -113,12 +113,12 @@ for $a\ge 1$ (again mind the small range $[1,(1-c)^{-1}$] where the reasoning is
   <summary> Julia code to plot this function</summary>
 
 ```julia
-c = 0.05
+c = 0.005
 beta = 0.7
 f(a) = a*((c+1/a)^(1-beta)-c^(1-beta))
 g(x)=f(x)/f(1)
 using Plots
-plot(f, xlim=[1,200])
+p = plot(g, xlim=[1,200], label = "\$\\gamma\$")
 ```
 </details>
 
