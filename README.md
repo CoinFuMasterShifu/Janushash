@@ -40,7 +40,7 @@ Recall that $x$ and $y$ are less than 1. This means $-\log(x)$ and $-\log(y)$ ar
 
 The following figure depicts the situation in log scale, the acceptance region $A_{\tau}$ is colored light blue:
 <p align="center">
-  <img src="./img/acceptance_region2.svg" alt="Acceptance Region"/>
+  <img src="./img/acceptance_region.svg" alt="Acceptance Region"/>
 </p>
 
 ## Probability Theory
@@ -255,43 +255,5 @@ sha256t_list=[0.025,0.014,0.032]
 get_miningratio(sha256t_list)
 ```
 </details>
-
-
-
-## UNFINISHED STUFF
-# Pools
-
-Conventional Proof of Work pools provide a service to allow miners to collaboratively find a proof of work that is too difficult for them to solve alone. The main benefit is the reduction of variance in mining income and since most people don't like variance they are willing to pay a small fee to reduce income variance (for the same reason insurances exist despite they cost more than they provide on average).
-
-## Nested Tasks and their associated value
-Mining pools provide simpler Proof of Work tasks to miners. Miners solve the simpler tasks to prove their contribution to the pool. It is essential that some solutions to the simpler tasks are also solutions to the difficult task that solves a block otherwise the pool tasks sent to miners would not be useful for solving a block. Pools must be able to send tasks at granular difficulty level to match the hashrate of the miner such that the miner does not solve its task too often nor too rarely. This means that their tasks are *nested* in the sense that a more difficult task is also a solution to an easier pool task. We can think of this as a nested chain of tasks where mining the block itself is the most difficult task that is contained in all other tasks (in the sense of mathematical set theory). Furthermore each task must have a value assigned such that the pool can count the contribution of each miner correctly. The value of a task should match the difficulty to allow the pool to correctly estimate each miner's contribution. 
-
-## Acceptance regions for pool tasks
-
-In traditional Proof of Work pools just send out headers with a simpler target. This is a very easy setting because we can easily understand and control the difficulty. If we require one zero less, this halves the difficulty and the value of a solved pool task (i.e. of a share), if we require one additional zero, this doubles the difficulty and the value. Furthermore this kind of tasks are nested because providing a hash starting with a specified number of zeros also is a solution to a task which requires less leading zeros.
-
-However in Janushash things are much more complicated.
-- Firstly we now have two dimensions instead of just one (one for verushash and one for triple sha256)
-- Secondly different mining styles (different Sha256t/Verushash v2.1 ratios)  might behave differently in how difficult pool tasks are solvable. This would be a disaster, if the pool cannot understand how difficult its tasks are it cannot assign a value to estimate contribution value of a share.
-
-Luckily the god of mathematics shines his light on us and makes this problem solvable. In fact we can find a nested set of two-dimensional acceptance regions such that *any* mining style behaves equally, i.e. we can find interesting two-dimensional shapes that have equal probability to be hit by a janushash, no matter how much GPU vs CPU performance is. This allows us to assign a value to them to keep track of miner contribution on pool side without knowing its mining style. Think about it: if such regions did not exist, fair pool mining would not be possible with Janushash. So we are very lucky that they exist!
-
-It turns out that such nested regions are simply defined by an altered target, i.e. dividing the target by 2, doubles the mining probability for all mining styles. Therefore pools can just use a different target $\tau$ for stratum tasks to control stratum difficulty *proportionally*. In particular pool jobs are of the form:
-
-- For a target $\tau\in[0,1]$ specified by pool (this will control the difficulty of a pool job) find a header $h$ with the following condition:
-    1. The Janushash must be below the target $J(h) < \tau$.
-    3. The Sha256t must not be too small $Y(h) \ge c$ for some constant $c=0.05$
-
-The value of a pool share corresponding to this block is then $1/\tau$.
-
-## Miner development 
-
-Usually Sha256t hashes can be computed much faster that Verushash v2.1 with current hardware. Therefore *filtered mining* must be used to exhaust available hardware:
-
-- In a first stage Sha256t hashes are computed on a batch of header *candidates*.
-- These candidates are filtered based on Sha256t hash such that their filtered rate matches the available hashrate for Verushash v2.1.
-- Only for the candidate headers that pass the filter the Verushash v2.1 is computed and the conditions for solving a block or poo job are checked.
-
-The important part is the filtering step: Since the Verushash v2.1 hash of a header is independent of the Sha256t hash it is clear that we should apply a filter that extracts the headers $h$ with the smallest Sha256t hashes $Y(h)$ that are still greater than $c$ because this will generate smaller Janushash $J(h) = X(h)Y(h)^{0.7}$ on average while satisfying the condition $Y(h) \ge c$.
 
 [^1]: *CoinFuMasterShifu* (2023). **[Proof of Balanced Work: The Theory of Mining Hash Products](https://github.com/CoinFuMasterShifu/ProofOfBalancedWork/blob/main/PoBW.pdf)**
